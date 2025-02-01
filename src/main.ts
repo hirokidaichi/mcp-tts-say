@@ -1,9 +1,17 @@
+import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import OpenAI from "openai";
+import { z } from "zod";
 import { synthesizeAndPlayAudio } from "./ttsPlayback";
-import { SayToolParams, SayToolResponse } from "./types";
 import { validateConfig } from "./config";
+import fs from "fs";
+
+// ログファイルの設定
+const logFile = "mcp-server.log";
+const log = (message: string) => {
+    fs.appendFileSync(logFile, `${new Date().toISOString()} - ${message}\n`);
+};
 
 // 環境変数のバリデーション
 const config = validateConfig();
@@ -17,11 +25,14 @@ const server = new McpServer({
     version: "1.0.0",
 });
 
+const saySchema = {
+    text: z.string().min(1, "テキストは必須です").describe("音声に変換して再生するテキスト")
+};
+
 server.tool(
     "say",
-    "テキストを音声に変換して再生します",
-    async (extra) => {
-        const text = (extra.args as SayToolParams).text;
+    saySchema,
+    async ({ text }) => {
         try {
             await synthesizeAndPlayAudio(openai, text);
             return {
@@ -31,7 +42,7 @@ server.tool(
                 }],
             };
         } catch (error) {
-            console.error("TTSエラー:", error);
+            log(`TTSエラー: ${error}`);
             return {
                 content: [{
                     type: "text",
@@ -46,6 +57,6 @@ server.tool(
 const transport = new StdioServerTransport();
 
 void server.connect(transport).then((): void => {
-    console.log("LocalVoicePlaybackServer が起動しました。");
-    console.log(`MCP Inspector: http://${config.MCP_INSPECTOR_HOST}:${config.MCP_INSPECTOR_PORT}`);
+    log("LocalVoicePlaybackServer が起動しました。");
+    log(`MCP Inspector: http://${config.MCP_INSPECTOR_HOST}:${config.MCP_INSPECTOR_PORT}`);
 }); 

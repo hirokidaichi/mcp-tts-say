@@ -12,8 +12,8 @@
     "test:watch": "jest --watch",
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
-    "inspect": "mcp-inspector dist/main.js",
-    "inspect:dev": "CLIENT_PORT=5173 SERVER_PORT=3000 mcp-inspector dist/main.js"
+    "inspect": "mcp-inspector ts-node -- src/main.ts",
+    "inspect:dev": "CLIENT_PORT=5173 SERVER_PORT=3000 mcp-inspector ts-node -- src/main.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",
@@ -25,7 +25,9 @@
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.4.1",
+    "dotenv": "^16.4.7",
     "openai": "^4.82.0",
-    "play-sound": "^1.1.6"
+    "play-sound": "^1.1.6",
+    "zod": "^3.24.1"
   }
 }
