@@ -13,7 +13,7 @@
     "lint": "eslint 'src/**/*.ts'",
     "lint:fix": "eslint 'src/**/*.ts' --fix",
     "inspect": "mcp-inspector ts-node -- src/main.ts",
-    "inspect:dev": "CLIENT_PORT=5173 SERVER_PORT=3000 mcp-inspector ts-node -- src/main.ts"
+    "inspect:dev": "OPENAI_API_KEY=${OPENAI_API_KEY} CLIENT_PORT=5173 SERVER_PORT=3000 mcp-inspector ts-node -- src/main.ts"
   },
   "devDependencies": {
     "@types/jest": "^29.5.14",

@@ -1,0 +1,11 @@
+# MCP TTS Say Configuration
+## Commands
+
+```json
+{
+  "test": "npm run test",
+  "dev": "npm run inspect:dev",
+  "lint": "npm run lint",
+  "build": "npm run build"
+}
+``

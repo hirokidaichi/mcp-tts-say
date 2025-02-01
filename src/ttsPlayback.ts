@@ -11,13 +11,13 @@ type VoiceType = 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
  * テキストから音声を合成し、ローカル再生を行う関数
  * @param openai OpenAIのインスタンス
  * @param text 再生するテキスト
- * @param voice 声色の種類（デフォルトは'alloy'）
+ * @param voice 声色の種類（デフォルトは'echo'）
  * @throws {Error} 音声合成やファイル操作に失敗した場合
  */
 export async function synthesizeAndPlayAudio(
     openai: OpenAI, 
     text: string, 
-    voice: VoiceType = 'alloy'
+    voice: VoiceType = 'echo'
 ): Promise<void> {
     let tmpFilePath: string | undefined;
     try {

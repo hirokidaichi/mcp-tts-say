@@ -1,17 +1,24 @@
-import "dotenv/config";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import OpenAI from "openai";
 import { z } from "zod";
 import { synthesizeAndPlayAudio } from "./ttsPlayback";
 import { validateConfig } from "./config";
-import fs from "fs";
+import { config as dotenvConfig } from "dotenv";
 
-// ログファイルの設定
-const logFile = "mcp-server.log";
+dotenvConfig();
+
+// ログ出力の設定
 const log = (message: string) => {
-    fs.appendFileSync(logFile, `${new Date().toISOString()} - ${message}\n`);
+    console.error(`${new Date().toISOString()} - ${message}`);
 };
+
+// コマンドライン引数からAPIキーを取得
+const apiKeyFromArg = process.argv[2];
+if (apiKeyFromArg) {
+    process.env.OPENAI_API_KEY = apiKeyFromArg;
+    log("APIキーをコマンドライン引数から設定しました。");
+}
 
 // 環境変数のバリデーション
 const config = validateConfig();
@@ -26,19 +33,22 @@ const server = new McpServer({
 });
 
 const saySchema = {
-    text: z.string().min(1, "テキストは必須です").describe("音声に変換して再生するテキスト")
+    text: z.string().min(1, "テキストは必須です").describe("音声に変換して再生するテキスト"),
+    voice: z.enum(["echo", "alloy", "fable", "onyx", "nova", "shimmer"])
+        .default("echo")
+        .describe("音声の声色を選択します。echo: こだまのような透明感のある声, alloy: 多目的で万能な声, fable: 物語に適した暖かみのある声, onyx: 力強く信頼感のある声, nova: 成熟した重厚な声, shimmer: 明るく陽気な声")
 };
 
 server.tool(
     "say",
     saySchema,
-    async ({ text }) => {
+    async ({ text, voice }) => {
         try {
-            await synthesizeAndPlayAudio(openai, text);
+            await synthesizeAndPlayAudio(openai, text, voice);
             return {
                 content: [{
                     type: "text",
-                    text: "音声再生中...",
+                    text: `音声再生中... (声色: ${voice})`,
                 }],
             };
         } catch (error) {
@@ -58,5 +68,4 @@ const transport = new StdioServerTransport();
 
 void server.connect(transport).then((): void => {
     log("LocalVoicePlaybackServer が起動しました。");
-    log(`MCP Inspector: http://${config.MCP_INSPECTOR_HOST}:${config.MCP_INSPECTOR_PORT}`);
 }); 

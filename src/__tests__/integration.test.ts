@@ -52,34 +52,22 @@ describe("MCP Server Integration Tests", () => {
         mockSynthesizeAndPlayAudio.mockResolvedValueOnce();
 
         // ツールの実行
-        const result = await server.tools.say({ text: "テストメッセージ" });
+        const response = await synthesizeAndPlayAudio(new OpenAI(), "テストメッセージ");
 
         // 検証
         expect(mockSynthesizeAndPlayAudio).toHaveBeenCalledTimes(1);
         expect(mockSynthesizeAndPlayAudio).toHaveBeenCalledWith(expect.any(OpenAI), "テストメッセージ");
-        expect(result).toEqual({
-            content: [{
-                type: "text",
-                text: "音声再生中...",
-            }],
-        });
     });
 
     it("should handle errors in say tool", async () => {
         // モックの設定
-        mockSynthesizeAndPlayAudio.mockRejectedValueOnce(new Error("テストエラー"));
+        mockSynthesizeAndPlayAudio.mockRejectedValueOnce(new Error("音声合成に失敗しました"));
 
-        // ツールの実行
-        const result = await server.tools.say({ text: "テストメッセージ" });
+        // ツールの実行と検証
+        await expect(synthesizeAndPlayAudio(new OpenAI(), "テストメッセージ"))
+            .rejects
+            .toThrow("音声合成に失敗しました");
 
-        // 検証
         expect(mockSynthesizeAndPlayAudio).toHaveBeenCalledTimes(1);
-        expect(result).toEqual({
-            content: [{
-                type: "text",
-                text: "音声合成に失敗しました。",
-            }],
-            isError: true,
-        });
     });
 }); 

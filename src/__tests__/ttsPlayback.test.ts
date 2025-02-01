@@ -51,20 +51,41 @@ describe("ttsPlayback", () => {
         (mockOpenAI.audio.speech.create as jest.Mock).mockResolvedValue(mockResponse);
         playErrorCallback = undefined;
         process.env.TEST_PLAY_ERROR = "false";
+        (fs.writeFileSync as jest.Mock).mockImplementation(() => {});
+        (fs.unlinkSync as jest.Mock).mockImplementation(() => {});
+        (fs.existsSync as jest.Mock).mockReturnValue(true);
     });
 
     it("正常に音声を合成して再生できる", async () => {
-        await expect(synthesizeAndPlayAudio(mockOpenAI, "テストテキスト"))
-            .resolves.not.toThrow();
+        const promise = synthesizeAndPlayAudio(mockOpenAI, "テストテキスト");
+
+        // コールバックを実行
+        await new Promise(resolve => setTimeout(resolve, 50));
+        if (playErrorCallback) {
+            playErrorCallback();
+        }
+
+        await promise;
 
         expect(mockOpenAI.audio.speech.create).toHaveBeenCalledWith({
             model: "tts-1",
-            voice: "alloy",
+            voice: "echo",
             input: "テストテキスト"
         });
 
         expect(fs.writeFileSync).toHaveBeenCalled();
         expect(fs.unlinkSync).toHaveBeenCalled();
+    });
+
+    it("異なる声色を指定して音声を合成できる", async () => {
+        await expect(synthesizeAndPlayAudio(mockOpenAI, "テストテキスト", "shimmer"))
+            .resolves.not.toThrow();
+
+        expect(mockOpenAI.audio.speech.create).toHaveBeenCalledWith({
+            model: "tts-1",
+            voice: "shimmer",
+            input: "テストテキスト"
+        });
     });
 
     it("OpenAI APIエラー時に適切なエラーを投げる", async () => {
